@@ -1,0 +1,61 @@
+
+name: AgileTest CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+env:
+  BASE_URL: ${{ vars.BASE_URL }}
+  BASE_AUTH_URL: ${{ vars.BASE_AUTH_URL }}
+  CLIENT_ID: ${{ secrets.CLIENT_ID }}
+  CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+  PROJECT_KEY: ${{ vars.PROJECT_KEY }}
+
+jobs:
+  test:
+    name: Run Automated Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Get source code
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      # 2. Setup Java
+      - name: Setup JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: temurin
+          cache: maven
+
+      # 3. Run automated tests
+      - name: Run JUnit tests
+        run: mvn -B package --file pom.xml
+
+      # 4. Import test results into AgileTest
+      - name: Submit test results to AgileTest
+        if: always()
+        run: |
+          REPORT="target/surefire-reports/TEST-calculateTest.xml"
+
+          if [ ! -f "$REPORT" ]; then
+            echo "JUnit report not found: $REPORT"
+            exit 1
+          fi
+
+          docker run --rm \
+            -e AGILETEST_BASE_URL="$BASE_URL" \
+            -e AGILETEST_AUTH_BASE_URL="$BASE_AUTH_URL" \
+            -e AGILETEST_CLIENT_ID="$CLIENT_ID" \
+            -e AGILETEST_CLIENT_SECRET="$CLIENT_SECRET" \
+            -v "${{ github.workspace }}/target/surefire-reports:/reports" \
+            ghcr.io/agiletestapp/agiletest-cli:latest \
+            test-execution import \
+            --framework-type junit \
+            --project-key "$PROJECT_KEY" \
+            /reports/TEST-calculateTest.xml
