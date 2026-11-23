@@ -47,9 +47,10 @@ jobs:
           path: reports/junit-report.xml
           if-no-files-found: error
 
+
       - name: Upload JUnit report to AgileTest IC
         run: |
-          REQUEST_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}-${GITHUB_SHA}"
+          REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
 
           echo "Request ID: ${REQUEST_ID}"
 
@@ -60,3 +61,4 @@ jobs:
             -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
             -H "Content-Type: application/xml" \
             --data-binary @reports/junit-report.xml
+
