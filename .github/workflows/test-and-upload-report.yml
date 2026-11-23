@@ -40,9 +40,11 @@ jobs:
 
       - name: Upload report to AgileTest IC
         run: |
+          REQUEST_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}-${GITHUB_SHA}"
+
           curl --show-error --fail-with-body \
             -X POST \
-            "${BASE_URL}?action=import&framework=behave&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            "${BASE_URL}?action=import&framework=behave&projectKey=${PROJECT_KEY}&requestId=${REQUEST_ID}" \
             -H "x-agiletest-client-id: ${CLIENT_ID}" \
             -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
             -H "Content-Type: application/json" \
@@ -73,9 +75,11 @@ jobs:
 
       - name: Upload report to AgileTest IC
         run: |
+          REQUEST_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}-${GITHUB_SHA}"
+
           curl --show-error --fail-with-body \
             -X POST \
-            "${BASE_URL}?action=import&framework=cucumber&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            "${BASE_URL}?action=import&framework=cucumber&projectKey=${PROJECT_KEY}&requestId=${REQUEST_ID}" \
             -H "x-agiletest-client-id: ${CLIENT_ID}" \
             -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
             -H "Content-Type: application/json" \
@@ -106,12 +110,14 @@ jobs:
 
       - name: Upload report to AgileTest IC
         run: |
+          REQUEST_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}-${GITHUB_SHA}"
+
           curl --show-error --fail-with-body \
             -X POST \
-            "${BASE_URL}?action=import&framework=junit&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            "${BASE_URL}?action=import&framework=junit&projectKey=${PROJECT_KEY}&requestId=${REQUEST_ID}" \
             -H "x-agiletest-client-id: ${CLIENT_ID}" \
             -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
-            -H "Content-Type: application/json" \
+            -H "Content-Type: application/xml" \
             --data-binary @reports/junit-report.xml
 
   robot-test-and-upload:
@@ -139,12 +145,14 @@ jobs:
 
       - name: Upload report to AgileTest IC
         run: |
+          REQUEST_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}-${GITHUB_SHA}"
+
           curl --show-error --fail-with-body \
             -X POST \
-            "${BASE_URL}?action=import&framework=robot&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            "${BASE_URL}?action=import&framework=robot&projectKey=${PROJECT_KEY}&requestId=${REQUEST_ID}" \
             -H "x-agiletest-client-id: ${CLIENT_ID}" \
             -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
-            -H "Content-Type: application/json" \
+            -H "Content-Type: application/xml" \
             --data-binary @reports/output.xml
 
   nunit-test-and-upload:
@@ -173,12 +181,14 @@ jobs:
 
       - name: Upload report to AgileTest IC
         run: |
+          REQUEST_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}-${GITHUB_SHA}"
+
           curl --show-error --fail-with-body \
             -X POST \
-            "${BASE_URL}?action=import&framework=nunit&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            "${BASE_URL}?action=import&framework=nunit&projectKey=${PROJECT_KEY}&requestId=${REQUEST_ID}" \
             -H "x-agiletest-client-id: ${CLIENT_ID}" \
             -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
-            -H "Content-Type: application/json" \
+            -H "Content-Type: application/xml" \
             --data-binary @reports/nunit-report.xml
 
   xunit-test-and-upload:
@@ -207,12 +217,14 @@ jobs:
 
       - name: Upload report to AgileTest IC
         run: |
+          REQUEST_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}-${GITHUB_SHA}"
+
           curl --show-error --fail-with-body \
             -X POST \
-            "${BASE_URL}?action=import&framework=xunit&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            "${BASE_URL}?action=import&framework=xunit&projectKey=${PROJECT_KEY}&requestId=${REQUEST_ID}" \
             -H "x-agiletest-client-id: ${CLIENT_ID}" \
             -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
-            -H "Content-Type: application/json" \
+            -H "Content-Type: application/xml" \
             --data-binary @reports/xunit-report.xml
 
   testng-test-and-upload:
@@ -241,10 +253,12 @@ jobs:
 
       - name: Upload report to AgileTest IC
         run: |
+          REQUEST_ID="${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${GITHUB_JOB}-${GITHUB_SHA}"
+
           curl --show-error --fail-with-body \
             -X POST \
-            "${BASE_URL}?action=import&framework=testng&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            "${BASE_URL}?action=import&framework=testng&projectKey=${PROJECT_KEY}&requestId=${REQUEST_ID}" \
             -H "x-agiletest-client-id: ${CLIENT_ID}" \
             -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
-            -H "Content-Type: application/json" \
+            -H "Content-Type: application/xml" \
             --data-binary @reports/testng-results.xml
