@@ -1,10 +1,22 @@
-
+```yaml
 name: Test & Upload Report
 
 on:
   push:
     branches: [main]
+
   workflow_dispatch:
+    inputs:
+      PROJECT_KEY:
+        description: "AgileTest Jira Project Key"
+        required: false
+        type: string
+
+      TEST_EXECUTION_KEY:
+        description: "AgileTest Test Execution Key"
+        required: false
+        type: string
+
   schedule:
     - cron: "0 0 * * *"
 
@@ -12,9 +24,14 @@ env:
   BASE_URL: ${{ vars.BASE_URL }}
   CLIENT_ID: ${{ secrets.CLIENT_ID }}
   CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
-  PROJECT_KEY: ${{ vars.PROJECT_KEY }}
+  PROJECT_KEY: ${{ inputs.PROJECT_KEY || vars.PROJECT_KEY }}
+  TEST_EXECUTION_KEY: ${{ inputs.TEST_EXECUTION_KEY }}
 
 jobs:
+
+  # ==========================================
+  # 1. BEHAVE
+  # ==========================================
   behave-test-and-upload:
     runs-on: ubuntu-latest
     steps:
@@ -38,7 +55,7 @@ jobs:
           name: behave-report
           path: reports/
 
-      - name: Upload report to AgileTest IC
+      - name: Upload report to AgileTest
         run: |
           REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
           echo "Request ID: ${REQUEST_ID}"
@@ -51,6 +68,9 @@ jobs:
             -H "Content-Type: application/json" \
             --data-binary @reports/behave-report.json
 
+  # ==========================================
+  # 2. CUCUMBER
+  # ==========================================
   cucumber-test-and-upload:
     runs-on: ubuntu-latest
     steps:
@@ -74,7 +94,7 @@ jobs:
           name: cucumber-report
           path: reports/
 
-      - name: Upload report to AgileTest IC
+      - name: Upload report to AgileTest
         run: |
           REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
           echo "Request ID: ${REQUEST_ID}"
@@ -87,6 +107,9 @@ jobs:
             -H "Content-Type: application/json" \
             --data-binary @reports/cucumber-report.json
 
+  # ==========================================
+  # 3. JUNIT
+  # ==========================================
   junit-test-and-upload:
     runs-on: ubuntu-latest
     steps:
@@ -110,7 +133,7 @@ jobs:
           name: junit-report
           path: reports/
 
-      - name: Upload report to AgileTest IC
+      - name: Upload report to AgileTest
         run: |
           REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
           echo "Request ID: ${REQUEST_ID}"
@@ -123,6 +146,9 @@ jobs:
             -H "Content-Type: application/xml" \
             --data-binary @reports/junit-report.xml
 
+  # ==========================================
+  # 4. ROBOT FRAMEWORK
+  # ==========================================
   robot-test-and-upload:
     runs-on: ubuntu-latest
     steps:
@@ -146,7 +172,7 @@ jobs:
           name: robot-report
           path: reports/
 
-      - name: Upload report to AgileTest IC
+      - name: Upload report to AgileTest
         run: |
           REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
           echo "Request ID: ${REQUEST_ID}"
@@ -159,6 +185,9 @@ jobs:
             -H "Content-Type: application/xml" \
             --data-binary @reports/output.xml
 
+  # ==========================================
+  # 5. NUNIT
+  # ==========================================
   nunit-test-and-upload:
     runs-on: ubuntu-latest
     steps:
@@ -183,7 +212,7 @@ jobs:
           name: nunit-report
           path: reports/
 
-      - name: Upload report to AgileTest IC
+      - name: Upload report to AgileTest
         run: |
           REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
           echo "Request ID: ${REQUEST_ID}"
@@ -196,6 +225,9 @@ jobs:
             -H "Content-Type: application/xml" \
             --data-binary @reports/nunit-report.xml
 
+  # ==========================================
+  # 6. XUNIT
+  # ==========================================
   xunit-test-and-upload:
     runs-on: ubuntu-latest
     steps:
@@ -220,7 +252,7 @@ jobs:
           name: xunit-report
           path: reports/
 
-      - name: Upload report to AgileTest IC
+      - name: Upload report to AgileTest
         run: |
           REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
           echo "Request ID: ${REQUEST_ID}"
@@ -233,6 +265,9 @@ jobs:
             -H "Content-Type: application/xml" \
             --data-binary @reports/xunit-report.xml
 
+  # ==========================================
+  # 7. TESTNG
+  # ==========================================
   testng-test-and-upload:
     runs-on: ubuntu-latest
     steps:
@@ -257,7 +292,7 @@ jobs:
           name: testng-report
           path: reports/
 
-      - name: Upload report to AgileTest IC
+      - name: Upload report to AgileTest
         run: |
           REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
           echo "Request ID: ${REQUEST_ID}"
@@ -269,3 +304,4 @@ jobs:
             -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
             -H "Content-Type: application/xml" \
             --data-binary @reports/testng-results.xml
+```
