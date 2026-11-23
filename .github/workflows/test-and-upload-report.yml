@@ -1,5 +1,5 @@
 
-name: JUnit Test & Upload Report
+name: Test & Upload Report
 
 on:
   push:
@@ -15,9 +15,44 @@ env:
   PROJECT_KEY: ${{ vars.PROJECT_KEY }}
 
 jobs:
-  junit-test-and-upload:
+  behave-test-and-upload:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run test & generate report
+        run: |
+          mkdir -p reports
+          pip install -r behave/requirements.txt
+          behave behave/features -f json -o reports/behave-report.json
+
+      - name: Upload report to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: behave-report
+          path: reports/
+
+      - name: Upload report to AgileTest IC
+        run: |
+          REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
+          echo "Request ID: ${REQUEST_ID}"
+
+          curl --show-error --fail-with-body \
+            -X POST \
+            "${BASE_URL}?action=import&framework=behave&projectKey=${PROJECT_KEY}&requestId=${REQUEST_ID}" \
+            -H "x-agiletest-client-id: ${CLIENT_ID}" \
+            -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
+            -H "Content-Type: application/json" \
+            --data-binary @reports/behave-report.json
+
+  cucumber-test-and-upload:
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,31 +62,57 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Run JUnit test & generate report
+      - name: Run test & generate report
+        run: |
+          mkdir -p reports
+          yarn
+          yarn cucumber-test
+
+      - name: Upload report to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: cucumber-report
+          path: reports/
+
+      - name: Upload report to AgileTest IC
+        run: |
+          REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
+          echo "Request ID: ${REQUEST_ID}"
+
+          curl --show-error --fail-with-body \
+            -X POST \
+            "${BASE_URL}?action=import&framework=cucumber&projectKey=${PROJECT_KEY}&requestId=${REQUEST_ID}" \
+            -H "x-agiletest-client-id: ${CLIENT_ID}" \
+            -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
+            -H "Content-Type: application/json" \
+            --data-binary @reports/cucumber-report.json
+
+  junit-test-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run test & generate report
         run: |
           mkdir -p reports
           yarn
           yarn junit-test
 
-      - name: Verify JUnit report
-        run: |
-          test -s reports/junit-report.xml || {
-            echo "JUnit report not found or empty!"
-            exit 1
-          }
-
       - name: Upload report to artifacts
         uses: actions/upload-artifact@v4
         with:
           name: junit-report
-          path: reports/junit-report.xml
-          if-no-files-found: error
+          path: reports/
 
-
-      - name: Upload JUnit report to AgileTest IC
+      - name: Upload report to AgileTest IC
         run: |
           REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
-
           echo "Request ID: ${REQUEST_ID}"
 
           curl --show-error --fail-with-body \
@@ -62,3 +123,149 @@ jobs:
             -H "Content-Type: application/xml" \
             --data-binary @reports/junit-report.xml
 
+  robot-test-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run test & generate report
+        run: |
+          mkdir -p reports
+          pip install -r robot/requirements.txt
+          robot -A robot/robot.config
+
+      - name: Upload report to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-report
+          path: reports/
+
+      - name: Upload report to AgileTest IC
+        run: |
+          REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
+          echo "Request ID: ${REQUEST_ID}"
+
+          curl --show-error --fail-with-body \
+            -X POST \
+            "${BASE_URL}?action=import&framework=robot&projectKey=${PROJECT_KEY}&requestId=${REQUEST_ID}" \
+            -H "x-agiletest-client-id: ${CLIENT_ID}" \
+            -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
+            -H "Content-Type: application/xml" \
+            --data-binary @reports/output.xml
+
+  nunit-test-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Run test & generate report
+        run: |
+          mkdir -p reports
+          cd nunit.test
+          dotnet restore
+          dotnet test --logger "nunit;LogFilePath=../reports/nunit-report.xml"
+
+      - name: Upload report to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nunit-report
+          path: reports/
+
+      - name: Upload report to AgileTest IC
+        run: |
+          REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
+          echo "Request ID: ${REQUEST_ID}"
+
+          curl --show-error --fail-with-body \
+            -X POST \
+            "${BASE_URL}?action=import&framework=nunit&projectKey=${PROJECT_KEY}&requestId=${REQUEST_ID}" \
+            -H "x-agiletest-client-id: ${CLIENT_ID}" \
+            -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
+            -H "Content-Type: application/xml" \
+            --data-binary @reports/nunit-report.xml
+
+  xunit-test-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Run test & generate report
+        run: |
+          mkdir -p reports
+          cd xunit.test
+          dotnet restore
+          dotnet test --logger "xunit;LogFilePath=../reports/xunit-report.xml"
+
+      - name: Upload report to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: xunit-report
+          path: reports/
+
+      - name: Upload report to AgileTest IC
+        run: |
+          REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
+          echo "Request ID: ${REQUEST_ID}"
+
+          curl --show-error --fail-with-body \
+            -X POST \
+            "${BASE_URL}?action=import&framework=xunit&projectKey=${PROJECT_KEY}&requestId=${REQUEST_ID}" \
+            -H "x-agiletest-client-id: ${CLIENT_ID}" \
+            -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
+            -H "Content-Type: application/xml" \
+            --data-binary @reports/xunit-report.xml
+
+  testng-test-and-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Run test & generate report
+        run: |
+          mkdir -p reports
+          cd testng.test
+          mvn test
+
+      - name: Upload report to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: testng-report
+          path: reports/
+
+      - name: Upload report to AgileTest IC
+        run: |
+          REQUEST_ID="pm-$(date +%s%3N)-$((RANDOM % 10000))"
+          echo "Request ID: ${REQUEST_ID}"
+
+          curl --show-error --fail-with-body \
+            -X POST \
+            "${BASE_URL}?action=import&framework=testng&projectKey=${PROJECT_KEY}&requestId=${REQUEST_ID}" \
+            -H "x-agiletest-client-id: ${CLIENT_ID}" \
+            -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
+            -H "Content-Type: application/xml" \
+            --data-binary @reports/testng-results.xml
