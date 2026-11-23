@@ -8,10 +8,8 @@ on:
   schedule:
     - cron: "0 0 * * *"
 
-# Các tên biến lấy đúng theo cấu hình ban đầu của bạn trên GitHub
 env:
   BASE_URL: ${{ vars.BASE_URL }}
-  BASE_AUTH_URL: ${{ vars.BASE_AUTH_URL }}
   CLIENT_ID: ${{ secrets.CLIENT_ID }}
   CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
   PROJECT_KEY: ${{ vars.PROJECT_KEY }}
@@ -26,10 +24,11 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.12
+          python-version: "3.12"
 
       - name: Run test & generate report
         run: |
+          mkdir -p reports
           pip install -r behave/requirements.txt
           behave behave/features -f json -o reports/behave-report.json
 
@@ -39,18 +38,15 @@ jobs:
           name: behave-report
           path: reports/
 
-      - name: Upload report to AgileTest
+      - name: Upload report to AgileTest IC
         run: |
-          docker run --rm \
-            -e AGILETEST_BASE_URL="$BASE_URL" \
-            -e AGILETEST_AUTH_BASE_URL="$BASE_AUTH_URL" \
-            -e AGILETEST_CLIENT_ID="$CLIENT_ID" \
-            -e AGILETEST_CLIENT_SECRET="$CLIENT_SECRET" \
-            -v "${{ github.workspace }}/reports:/reports" \
-            ghcr.io/agiletestapp/agiletest-cli:latest \
-            test-execution import --framework-type behave \
-            --project-key "$PROJECT_KEY" \
-            /reports/behave-report.json
+          curl --show-error --fail-with-body \
+            -X POST \
+            "${BASE_URL}?action=import&framework=behave&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            -H "x-agiletest-client-id: ${CLIENT_ID}" \
+            -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
+            -H "Content-Type: application/json" \
+            --data-binary @reports/behave-report.json
 
   cucumber-test-and-upload:
     runs-on: ubuntu-latest
@@ -61,10 +57,11 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "20"
 
       - name: Run test & generate report
         run: |
+          mkdir -p reports
           yarn
           yarn cucumber-test
 
@@ -74,18 +71,15 @@ jobs:
           name: cucumber-report
           path: reports/
 
-      - name: Upload report to AgileTest
+      - name: Upload report to AgileTest IC
         run: |
-          docker run --rm \
-            -e AGILETEST_BASE_URL="$BASE_URL" \
-            -e AGILETEST_AUTH_BASE_URL="$BASE_AUTH_URL" \
-            -e AGILETEST_CLIENT_ID="$CLIENT_ID" \
-            -e AGILETEST_CLIENT_SECRET="$CLIENT_SECRET" \
-            -v "${{ github.workspace }}/reports:/reports" \
-            ghcr.io/agiletestapp/agiletest-cli:latest \
-            test-execution import --framework-type cucumber \
-            --project-key "$PROJECT_KEY" \
-            /reports/cucumber-report.json
+          curl --show-error --fail-with-body \
+            -X POST \
+            "${BASE_URL}?action=import&framework=cucumber&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            -H "x-agiletest-client-id: ${CLIENT_ID}" \
+            -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
+            -H "Content-Type: application/json" \
+            --data-binary @reports/cucumber-report.json
 
   junit-test-and-upload:
     runs-on: ubuntu-latest
@@ -96,10 +90,11 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: "20"
 
       - name: Run test & generate report
         run: |
+          mkdir -p reports
           yarn
           yarn junit-test
 
@@ -109,18 +104,15 @@ jobs:
           name: junit-report
           path: reports/
 
-      - name: Upload report to AgileTest
+      - name: Upload report to AgileTest IC
         run: |
-          docker run --rm \
-            -e AGILETEST_BASE_URL="$BASE_URL" \
-            -e AGILETEST_AUTH_BASE_URL="$BASE_AUTH_URL" \
-            -e AGILETEST_CLIENT_ID="$CLIENT_ID" \
-            -e AGILETEST_CLIENT_SECRET="$CLIENT_SECRET" \
-            -v "${{ github.workspace }}/reports:/reports" \
-            ghcr.io/agiletestapp/agiletest-cli:latest \
-            test-execution import --framework-type junit \
-            --project-key "$PROJECT_KEY" \
-            /reports/junit-report.xml
+          curl --show-error --fail-with-body \
+            -X POST \
+            "${BASE_URL}?action=import&framework=junit&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            -H "x-agiletest-client-id: ${CLIENT_ID}" \
+            -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
+            -H "Content-Type: application/json" \
+            --data-binary @reports/junit-report.xml
 
   robot-test-and-upload:
     runs-on: ubuntu-latest
@@ -131,10 +123,11 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: 3.12
+          python-version: "3.12"
 
       - name: Run test & generate report
         run: |
+          mkdir -p reports
           pip install -r robot/requirements.txt
           robot -A robot/robot.config
 
@@ -144,18 +137,15 @@ jobs:
           name: robot-report
           path: reports/
 
-      - name: Upload report to AgileTest
+      - name: Upload report to AgileTest IC
         run: |
-          docker run --rm \
-            -e AGILETEST_BASE_URL="$BASE_URL" \
-            -e AGILETEST_AUTH_BASE_URL="$BASE_AUTH_URL" \
-            -e AGILETEST_CLIENT_ID="$CLIENT_ID" \
-            -e AGILETEST_CLIENT_SECRET="$CLIENT_SECRET" \
-            -v "${{ github.workspace }}/reports:/reports" \
-            ghcr.io/agiletestapp/agiletest-cli:latest \
-            test-execution import --framework-type robot \
-            --project-key "$PROJECT_KEY" \
-            /reports/robot-report.xml
+          curl --show-error --fail-with-body \
+            -X POST \
+            "${BASE_URL}?action=import&framework=robot&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            -H "x-agiletest-client-id: ${CLIENT_ID}" \
+            -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
+            -H "Content-Type: application/json" \
+            --data-binary @reports/output.xml
 
   nunit-test-and-upload:
     runs-on: ubuntu-latest
@@ -165,10 +155,14 @@ jobs:
 
       - name: Setup Dotnet
         uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
 
       - name: Run test & generate report
         run: |
-          cd nunit.test && dotnet restore
+          mkdir -p reports
+          cd nunit.test
+          dotnet restore
           dotnet test --logger "nunit;LogFilePath=../reports/nunit-report.xml"
 
       - name: Upload report to artifacts
@@ -177,18 +171,15 @@ jobs:
           name: nunit-report
           path: reports/
 
-      - name: Upload report to AgileTest
+      - name: Upload report to AgileTest IC
         run: |
-          docker run --rm \
-            -e AGILETEST_BASE_URL="$BASE_URL" \
-            -e AGILETEST_AUTH_BASE_URL="$BASE_AUTH_URL" \
-            -e AGILETEST_CLIENT_ID="$CLIENT_ID" \
-            -e AGILETEST_CLIENT_SECRET="$CLIENT_SECRET" \
-            -v "${{ github.workspace }}/reports:/reports" \
-            ghcr.io/agiletestapp/agiletest-cli:latest \
-            test-execution import --framework-type nunit \
-            --project-key "$PROJECT_KEY" \
-            /reports/nunit-report.xml
+          curl --show-error --fail-with-body \
+            -X POST \
+            "${BASE_URL}?action=import&framework=nunit&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            -H "x-agiletest-client-id: ${CLIENT_ID}" \
+            -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
+            -H "Content-Type: application/json" \
+            --data-binary @reports/nunit-report.xml
 
   xunit-test-and-upload:
     runs-on: ubuntu-latest
@@ -198,10 +189,14 @@ jobs:
 
       - name: Setup Dotnet
         uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
 
       - name: Run test & generate report
         run: |
-          cd xunit.test && dotnet restore
+          mkdir -p reports
+          cd xunit.test
+          dotnet restore
           dotnet test --logger "xunit;LogFilePath=../reports/xunit-report.xml"
 
       - name: Upload report to artifacts
@@ -210,18 +205,15 @@ jobs:
           name: xunit-report
           path: reports/
 
-      - name: Upload report to AgileTest
+      - name: Upload report to AgileTest IC
         run: |
-          docker run --rm \
-            -e AGILETEST_BASE_URL="$BASE_URL" \
-            -e AGILETEST_AUTH_BASE_URL="$BASE_AUTH_URL" \
-            -e AGILETEST_CLIENT_ID="$CLIENT_ID" \
-            -e AGILETEST_CLIENT_SECRET="$CLIENT_SECRET" \
-            -v "${{ github.workspace }}/reports:/reports" \
-            ghcr.io/agiletestapp/agiletest-cli:latest \
-            test-execution import --framework-type xunit \
-            --project-key "$PROJECT_KEY" \
-            /reports/xunit-report.xml
+          curl --show-error --fail-with-body \
+            -X POST \
+            "${BASE_URL}?action=import&framework=xunit&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            -H "x-agiletest-client-id: ${CLIENT_ID}" \
+            -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
+            -H "Content-Type: application/json" \
+            --data-binary @reports/xunit-report.xml
 
   testng-test-and-upload:
     runs-on: ubuntu-latest
@@ -237,7 +229,9 @@ jobs:
 
       - name: Run test & generate report
         run: |
-          cd testng.test && mvn test
+          mkdir -p reports
+          cd testng.test
+          mvn test
 
       - name: Upload report to artifacts
         uses: actions/upload-artifact@v4
@@ -245,15 +239,12 @@ jobs:
           name: testng-report
           path: reports/
 
-      - name: Upload report to AgileTest
+      - name: Upload report to AgileTest IC
         run: |
-          docker run --rm \
-            -e AGILETEST_BASE_URL="$BASE_URL" \
-            -e AGILETEST_AUTH_BASE_URL="$BASE_AUTH_URL" \
-            -e AGILETEST_CLIENT_ID="$CLIENT_ID" \
-            -e AGILETEST_CLIENT_SECRET="$CLIENT_SECRET" \
-            -v "${{ github.workspace }}/reports:/reports" \
-            ghcr.io/agiletestapp/agiletest-cli:latest \
-            test-execution import --framework-type testng \
-            --project-key "$PROJECT_KEY" \
-            /reports/testng-results.xml
+          curl --show-error --fail-with-body \
+            -X POST \
+            "${BASE_URL}?action=import&framework=testng&projectKey=${PROJECT_KEY}&requestId=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            -H "x-agiletest-client-id: ${CLIENT_ID}" \
+            -H "x-agiletest-client-secret: ${CLIENT_SECRET}" \
+            -H "Content-Type: application/json" \
+            --data-binary @reports/testng-results.xml
