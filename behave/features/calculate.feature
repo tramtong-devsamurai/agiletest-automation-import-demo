@@ -1,13 +1,13 @@
-@TC-234
+@V5-130
 Feature: Basic Arithmetic Operations
 
-  @TC-235
+  @V5-127
   Scenario: Adding two numbers
     Given I have the number 1
     When I increase it by 2
     Then the result should return 3
 
-  @TC-236
+  @V5-128
   Scenario: Subtracting two numbers
     Given I have the number 5
     When I subtract 3 from it
