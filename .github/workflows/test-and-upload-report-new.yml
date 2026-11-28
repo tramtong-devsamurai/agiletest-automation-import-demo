@@ -4,6 +4,14 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      PROJECT_KEY:
+        description: "Project key"
+        required: true
+        default: "V5"
+      TEST_EXECUTION_KEY:
+        description: "Test execution key"
+        required: true
   schedule:
     - cron: "0 0 * * *"
 
